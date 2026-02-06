@@ -16,8 +16,22 @@
 
 package org.springframework.samples.petclinic.rest.controller;
 
-import tools.jackson.databind.ObjectMapper;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,16 +54,9 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 /**
@@ -148,6 +155,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("Id 1인 유저를 생성하면, get으로 불러왔을 때 Id 1인 유저를 반환할 것이다.")
     void testGetOwnerSuccess() throws Exception {
         given(this.clinicService.findOwnerById(1)).willReturn(ownerMapper.toOwner(owners.get(0)));
         this.mockMvc.perform(get("/api/owners/1")
@@ -160,6 +168,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("Id 2인 유저를 생성하지 않으면, get으로 불러왔을 때 isNotFound를 발생시킨다.")
     void testGetOwnerNotFound() throws Exception {
         given(this.clinicService.findOwnerById(2)).willReturn(null);
         this.mockMvc.perform(get("/api/owners/2")
@@ -169,6 +178,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("ownerList를 성공적으로 반환하는지 검사한다.")
     void testGetOwnersListSuccess() throws Exception {
         owners.remove(0);
         owners.remove(1);
@@ -185,6 +195,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("존재하지 않는 유저를 찾으려고 할 때 isNotFound를 발생시킨다.")
     void testGetOwnersListNotFound() throws Exception {
         owners.clear();
         given(this.clinicService.findOwnerByLastName("0")).willReturn(ownerMapper.toOwners(owners));
@@ -195,6 +206,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("모든 owner를 잘 반환하는지 검사한다.")
     void testGetAllOwnersSuccess() throws Exception {
         owners.remove(0);
         owners.remove(1);
@@ -211,6 +223,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("빈 owners list에 대해 isNotFound를 발생시킨다.")
     void testGetAllOwnersNotFound() throws Exception {
         owners.clear();
         given(this.clinicService.findAllOwners()).willReturn(ownerMapper.toOwners(owners));
@@ -221,6 +234,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("정상적으로 newOwnerDto를 생성하면, isCreated 상태가 된다.")
     void testCreateOwnerSuccess() throws Exception {
         OwnerDto newOwnerDto = owners.get(0);
         newOwnerDto.setId(null);
@@ -233,6 +247,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("newOwnderDto를 생성한 후, id와 firstname을 null으로 설정하면 BadRequest 상태가 된다.")
     void testCreateOwnerError() throws Exception {
         OwnerDto newOwnerDto = owners.get(0);
         newOwnerDto.setId(null);
@@ -246,6 +261,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("owner 정보를 업데이트(id, FirstNamme, LastName, Address, City, Telephone)하면 owner의 정보가 정상적으로 업데이트된다.")
     void testUpdateOwnerSuccess() throws Exception {
         given(this.clinicService.findOwnerById(1)).willReturn(ownerMapper.toOwner(owners.get(0)));
         int ownerId = owners.get(0).getId();
@@ -275,10 +291,12 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("owner 정보를 업데이트 할 때 id를 명시해주지 않아도 업데이트된 정보가 잘 반영된다.")
     void testUpdateOwnerSuccessNoBodyId() throws Exception {
         given(this.clinicService.findOwnerById(1)).willReturn(ownerMapper.toOwner(owners.get(0)));
         int ownerId = owners.get(0).getId();
         OwnerDto updatedOwnerDto = new OwnerDto();
+//        updatedOwnerDto.setId(ownerId);
         updatedOwnerDto.setFirstName("GeorgeI");
         updatedOwnerDto.setLastName("Franklin");
         updatedOwnerDto.setAddress("110 W. Liberty St.");
@@ -303,6 +321,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("owner 정보를 업데이트 할 때, FirstName을 null으로 설정하면 BadRequest 상태가 된다.")
     void testUpdateOwnerError() throws Exception {
         OwnerDto newOwnerDto = owners.get(0);
         newOwnerDto.setFirstName("");
@@ -315,6 +334,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("id=1인 owner를 삭제하면, id=1로 접속했을 때 isNoContent 상태가 된다.")
     void testDeleteOwnerSuccess() throws Exception {
         OwnerDto newOwnerDto = owners.get(0);
         ObjectMapper mapper = new ObjectMapper();
@@ -328,6 +348,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("존재하지 않는 owner(id=999)를 삭제하려 했을 때 isNotFound 상태가 된다.")
     void testDeleteOwnerError() throws Exception {
         OwnerDto newOwnerDto = owners.get(0);
         ObjectMapper mapper = new ObjectMapper();
@@ -340,6 +361,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("pet의 id를 정상적으로(id=999) 설정하면, 등록이 정상적으로 진행되어 isCreated 상태가 된다.")
     void testCreatePetSuccess() throws Exception {
         PetDto newPet = pets.get(0);
         newPet.setId(999);
@@ -347,7 +369,7 @@ class OwnerRestControllerTests {
             .defaultDateFormat(new SimpleDateFormat("dd/MM/yyyy"))
             .build();
         String newPetAsJSON = mapper.writeValueAsString(newPet);
-        System.err.println("--> newPetAsJSON=" + newPetAsJSON);
+        System.err.println("--> newPetAsJSON=" + newPetAsJSON); // TODO: 뭐임? 
         this.mockMvc.perform(post("/api/owners/1/pets")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isCreated());
@@ -355,6 +377,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("pet의 id와 name을 null로 설정하면, 등록이 진행되지 않고 isBadRequest 상태가 된다.")
     void testCreatePetError() throws Exception {
         PetDto newPet = pets.get(0);
         newPet.setId(null);
@@ -370,6 +393,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("pet의 id를 정상적으로(id=999) 설정한 후, 해당 TODO로 방문하면 isCreated 상태가 된다.")
     void testCreateVisitSuccess() throws Exception {
         VisitDto newVisit = visits.get(0);
         newVisit.setId(999);
@@ -383,6 +407,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("owner와 pet을 정상적으로 설정하면, id=2인 owner의 pet 중, id=1인 pet의 정보를 반환한다.")
     void testGetOwnerPetSuccess() throws Exception {
         var owner = ownerMapper.toOwner(owners.get(0));
         given(this.clinicService.findOwnerById(2)).willReturn(owner);
@@ -397,6 +422,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("owner가 비어있을 때, owner를 통해 pet의 정보를 확인하면 isNotFound를 반환한다.")
     void testGetOwnersPetsWithOwnerNotFound() throws Exception {
         owners.clear();
         given(this.clinicService.findAllOwners()).willReturn(ownerMapper.toOwners(owners));
@@ -407,6 +433,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("정상적으로 정의된 owner에 대해 연결된 pet이 없을 때, 해당 pet의 정보를 확인하려고 하면 isNotFound를 반환한다.")
     void testGetOwnersPetsWithPetNotFound() throws Exception {
         var owner1 = ownerMapper.toOwner(owners.get(0));
         given(this.clinicService.findOwnerById(1)).willReturn(owner1);
@@ -418,6 +445,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("정상적으로 정의되고 연결된 owner, pet에 대해, 해당 pet의 정보를 확인하려고 하면 엥?") // TODO: 확인필요. 왜 isNoContent를 기대하는지? 
     void testUpdateOwnersPetSuccess() throws Exception {
         int ownerId = owners.get(0).getId();
         int petId = pets.get(0).getId();
@@ -437,8 +465,10 @@ class OwnerRestControllerTests {
             .andExpect(status().isNoContent());
     }
 
+    // TODO: DisplayName 마저 달기
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("")
     void testUpdateOwnersPetOwnerNotFound() throws Exception {
         int ownerId = 0;
         int petId = pets.get(0).getId();
