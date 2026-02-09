@@ -153,9 +153,10 @@ class OwnerRestControllerTests {
         return visit.id(id).date(LocalDate.now()).description("test" + id);
     }
 
+    // 발표
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
-    @DisplayName("Id 1인 유저를 생성하면, get으로 불러왔을 때 Id 1인 유저를 반환할 것이다.")
+    @DisplayName("Id=1인 owner가 존재하고, Id=1인 owner를 찾으려 하면, 해당 owner에 대한 정보를 정상적으로 반환한다. ")
     void testGetOwnerSuccess() throws Exception {
         given(this.clinicService.findOwnerById(1)).willReturn(ownerMapper.toOwner(owners.get(0)));
         this.mockMvc.perform(get("/api/owners/1")
@@ -166,9 +167,10 @@ class OwnerRestControllerTests {
             .andExpect(jsonPath("$.firstName").value("George"));
     }
 
+    // 발표
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
-    @DisplayName("Id 2인 유저를 생성하지 않으면, get으로 불러왔을 때 isNotFound를 발생시킨다.")
+    @DisplayName("존재하지 않는 owner(id=2)에 대한 정보를 조회하려고 하면, isNotFound를 반환한다.")
     void testGetOwnerNotFound() throws Exception {
         given(this.clinicService.findOwnerById(2)).willReturn(null);
         this.mockMvc.perform(get("/api/owners/2")
@@ -259,9 +261,10 @@ class OwnerRestControllerTests {
             .andExpect(status().isBadRequest());
     }
 
+    // 발표
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
-    @DisplayName("owner 정보를 업데이트(id, FirstNamme, LastName, Address, City, Telephone)하면 owner의 정보가 정상적으로 업데이트된다.")
+    @DisplayName("존재하는 owner(id=1)에 대한 정보를 업데이트하면, 정보가 정상적으로 업데이트된다.")
     void testUpdateOwnerSuccess() throws Exception {
         given(this.clinicService.findOwnerById(1)).willReturn(ownerMapper.toOwner(owners.get(0)));
         int ownerId = owners.get(0).getId();
@@ -369,7 +372,7 @@ class OwnerRestControllerTests {
             .defaultDateFormat(new SimpleDateFormat("dd/MM/yyyy"))
             .build();
         String newPetAsJSON = mapper.writeValueAsString(newPet);
-        System.err.println("--> newPetAsJSON=" + newPetAsJSON); // TODO: 뭐임? 
+        System.err.println("--> newPetAsJSON=" + newPetAsJSON); 
         this.mockMvc.perform(post("/api/owners/1/pets")
                 .content(newPetAsJSON).accept(MediaType.APPLICATION_JSON_VALUE).contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isCreated());
@@ -445,7 +448,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
-    @DisplayName("정상적으로 정의되고 연결된 owner, pet에 대해, 해당 pet의 정보를 확인하려고 하면 엥?") // TODO: 확인필요. 왜 isNoContent를 기대하는지? 
+    @DisplayName("정상적인 owner와 pet에 대해, pet 정보 수정을 요청하면 isNoContent를 반환한다. ")  
     void testUpdateOwnersPetSuccess() throws Exception {
         int ownerId = owners.get(0).getId();
         int petId = pets.get(0).getId();
@@ -468,7 +471,7 @@ class OwnerRestControllerTests {
     // TODO: DisplayName 마저 달기
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
-    @DisplayName("")
+    @DisplayName("존재하지 않는 owner의 pet 정보를 수정하려 하면 isNotFound를 반환한다.")
     void testUpdateOwnersPetOwnerNotFound() throws Exception {
         int ownerId = 0;
         int petId = pets.get(0).getId();
@@ -487,6 +490,7 @@ class OwnerRestControllerTests {
 
     @Test
     @WithMockUser(roles = "OWNER_ADMIN")
+    @DisplayName("owner는 존재하지만 수정하려는 pet이 존재하지 않을 경우 isNotFound를 반환한다. ")
     void testUpdateOwnersPetPetNotFound() throws Exception {
         int ownerId = owners.get(0).getId();
         int petId = 0;
